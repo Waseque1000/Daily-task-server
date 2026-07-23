@@ -10,6 +10,14 @@ const firebase_admin_1 = __importDefault(require("firebase-admin"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const tasks_1 = __importDefault(require("./routes/tasks"));
 dotenv_1.default.config();
+let cachedDb = null;
+async function connectDB() {
+    if (cachedDb)
+        return cachedDb;
+    const conn = await mongoose_1.default.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/task-manager');
+    cachedDb = conn;
+    return conn;
+}
 // Initialize Firebase Admin (if credentials are provided)
 const hasFirebaseCredentials = process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL;
 if (hasFirebaseCredentials) {
@@ -31,25 +39,37 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
+// Connect to MongoDB on every request (cached connection reused)
+app.use(async (_, res, next) => {
+    try {
+        await connectDB();
+        next();
+    }
+    catch (err) {
+        res.status(500).json({ error: 'Database connection failed' });
+    }
+});
 // Routes
 app.use('/api/tasks', tasks_1.default);
 // Health check
 app.get('/api/health', (_, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
-// Connect to MongoDB and start server
-const start = async () => {
-    try {
-        await mongoose_1.default.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/task-manager');
-        console.log('Connected to MongoDB');
-        app.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
-        });
-    }
-    catch (error) {
-        console.error('Failed to start server:', error);
-        process.exit(1);
-    }
-};
-start();
+// Start server only when NOT in Vercel serverless environment
+if (!process.env.VERCEL) {
+    const start = async () => {
+        try {
+            await connectDB();
+            app.listen(PORT, () => {
+                console.log(`Server running on port ${PORT}`);
+            });
+        }
+        catch (error) {
+            console.error('Failed to start server:', error);
+            process.exit(1);
+        }
+    };
+    start();
+}
+exports.default = app;
 //# sourceMappingURL=index.js.map
