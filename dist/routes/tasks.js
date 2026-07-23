@@ -30,7 +30,8 @@ router.get('/date/:date', auth_1.authenticate, async (req, res) => {
         res.json(tasks);
     }
     catch (error) {
-        res.status(500).json({ error: 'Failed to fetch tasks' });
+        console.error('GET /date/:date error:', error?.message || error);
+        res.status(500).json({ error: 'Failed to fetch tasks', detail: error?.message });
     }
 });
 // Get tasks for date range (for dashboard)
@@ -48,7 +49,8 @@ router.get('/range', auth_1.authenticate, async (req, res) => {
         res.json(tasks);
     }
     catch (error) {
-        res.status(500).json({ error: 'Failed to fetch tasks' });
+        console.error('GET /range error:', error?.message || error);
+        res.status(500).json({ error: 'Failed to fetch tasks', detail: error?.message });
     }
 });
 // Get all tasks for stats
@@ -105,7 +107,8 @@ router.get('/stats', auth_1.authenticate, async (req, res) => {
         });
     }
     catch (error) {
-        res.status(500).json({ error: 'Failed to fetch stats' });
+        console.error('GET /stats error:', error?.message || error);
+        res.status(500).json({ error: 'Failed to fetch stats', detail: error?.message });
     }
 });
 // Create task
@@ -128,7 +131,8 @@ router.post('/', auth_1.authenticate, async (req, res) => {
         if (error instanceof zod_1.z.ZodError) {
             return res.status(400).json({ error: error.errors });
         }
-        res.status(500).json({ error: 'Failed to create task' });
+        console.error('POST / error:', error?.message || error);
+        res.status(500).json({ error: 'Failed to create task', detail: error?.message });
     }
 });
 // Update task
@@ -147,7 +151,8 @@ router.put('/:id', auth_1.authenticate, async (req, res) => {
         if (error instanceof zod_1.z.ZodError) {
             return res.status(400).json({ error: error.errors });
         }
-        res.status(500).json({ error: 'Failed to update task' });
+        console.error('PUT /:id error:', error?.message || error);
+        res.status(500).json({ error: 'Failed to update task', detail: error?.message });
     }
 });
 // Delete task
@@ -162,7 +167,8 @@ router.delete('/:id', auth_1.authenticate, async (req, res) => {
         res.json({ success: true });
     }
     catch (error) {
-        res.status(500).json({ error: 'Failed to delete task' });
+        console.error('DELETE /:id error:', error?.message || error);
+        res.status(500).json({ error: 'Failed to delete task', detail: error?.message });
     }
 });
 // Auto rollover
@@ -184,7 +190,8 @@ router.post('/rollover', auth_1.authenticate, async (req, res) => {
         res.json({ rolledOver: result.modifiedCount });
     }
     catch (error) {
-        res.status(500).json({ error: 'Failed to rollover tasks' });
+        console.error('POST /rollover error:', error?.message || error);
+        res.status(500).json({ error: 'Failed to rollover tasks', detail: error?.message });
     }
 });
 exports.default = router;

@@ -1,4 +1,4 @@
-import { Router, Response } from 'express';
+import { Router, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { Task } from '../models/Task';
 import { authenticate, AuthRequest } from '../middleware/auth';
@@ -34,8 +34,9 @@ router.get('/date/:date', authenticate, async (req: AuthRequest, res: Response) 
     }).sort({ createdAt: -1 });
 
     res.json(tasks);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch tasks' });
+  } catch (error: any) {
+    console.error('GET /date/:date error:', error?.message || error);
+    res.status(500).json({ error: 'Failed to fetch tasks', detail: error?.message });
   }
 });
 
@@ -54,8 +55,9 @@ router.get('/range', authenticate, async (req: AuthRequest, res: Response) => {
     }).sort({ taskDate: -1 });
 
     res.json(tasks);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch tasks' });
+  } catch (error: any) {
+    console.error('GET /range error:', error?.message || error);
+    res.status(500).json({ error: 'Failed to fetch tasks', detail: error?.message });
   }
 });
 
@@ -116,8 +118,9 @@ router.get('/stats', authenticate, async (req: AuthRequest, res: Response) => {
       streak,
       dailyStats,
     });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch stats' });
+  } catch (error: any) {
+    console.error('GET /stats error:', error?.message || error);
+    res.status(500).json({ error: 'Failed to fetch stats', detail: error?.message });
   }
 });
 
@@ -138,11 +141,12 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
     });
 
     res.status(201).json(task);
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    res.status(500).json({ error: 'Failed to create task' });
+    console.error('POST / error:', error?.message || error);
+    res.status(500).json({ error: 'Failed to create task', detail: error?.message });
   }
 });
 
@@ -164,11 +168,12 @@ router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
     }
 
     res.json(task);
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    res.status(500).json({ error: 'Failed to update task' });
+    console.error('PUT /:id error:', error?.message || error);
+    res.status(500).json({ error: 'Failed to update task', detail: error?.message });
   }
 });
 
@@ -185,8 +190,9 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res: Response) => {
     }
 
     res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to delete task' });
+  } catch (error: any) {
+    console.error('DELETE /:id error:', error?.message || error);
+    res.status(500).json({ error: 'Failed to delete task', detail: error?.message });
   }
 });
 
@@ -212,8 +218,9 @@ router.post('/rollover', authenticate, async (req: AuthRequest, res: Response) =
     );
 
     res.json({ rolledOver: result.modifiedCount });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to rollover tasks' });
+  } catch (error: any) {
+    console.error('POST /rollover error:', error?.message || error);
+    res.status(500).json({ error: 'Failed to rollover tasks', detail: error?.message });
   }
 });
 

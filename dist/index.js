@@ -12,11 +12,14 @@ const tasks_1 = __importDefault(require("./routes/tasks"));
 dotenv_1.default.config();
 let cachedDb = null;
 async function connectDB() {
-    if (cachedDb)
+    if (cachedDb && mongoose_1.default.connection.readyState === 1)
         return cachedDb;
-    const conn = await mongoose_1.default.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/task-manager');
-    cachedDb = conn;
-    return conn;
+    await mongoose_1.default.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/task-manager', {
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+    });
+    cachedDb = mongoose_1.default;
+    return cachedDb;
 }
 // Initialize Firebase Admin (if credentials are provided)
 const hasFirebaseCredentials = process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL;
@@ -46,7 +49,8 @@ app.use(async (_, res, next) => {
         next();
     }
     catch (err) {
-        res.status(500).json({ error: 'Database connection failed' });
+        console.error('MongoDB connection error:', err?.message || err);
+        res.status(500).json({ error: 'Database connection failed', detail: err?.message });
     }
 });
 // Routes

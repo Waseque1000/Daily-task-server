@@ -10,10 +10,13 @@ dotenv.config();
 let cachedDb: typeof mongoose | null = null;
 
 async function connectDB() {
-  if (cachedDb) return cachedDb;
-  const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/task-manager');
-  cachedDb = conn;
-  return conn;
+  if (cachedDb && mongoose.connection.readyState === 1) return cachedDb;
+  await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/task-manager', {
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+  });
+  cachedDb = mongoose;
+  return cachedDb;
 }
 
 // Initialize Firebase Admin (if credentials are provided)
@@ -46,8 +49,9 @@ app.use(async (_, res, next) => {
   try {
     await connectDB();
     next();
-  } catch (err) {
-    res.status(500).json({ error: 'Database connection failed' });
+  } catch (err: any) {
+    console.error('MongoDB connection error:', err?.message || err);
+    res.status(500).json({ error: 'Database connection failed', detail: err?.message });
   }
 });
 
