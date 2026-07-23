@@ -51,6 +51,10 @@ app.use(async (_, res, next) => {
 });
 // Routes
 app.use('/api/tasks', tasks_1.default);
+// Root route
+app.get('/', (_, res) => {
+    res.json({ status: 'ok', service: 'daily-life-api' });
+});
 // Health check
 app.get('/api/health', (_, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
